@@ -22,7 +22,17 @@ $app->config(
     ['debug' => isset($settings['debug']) ? (bool)$settings['debug'] : false]
 );
 
-function logiin($phoneNumber, $message = '', $logfile = '') {
+/**
+ * Log door opening event to log file
+ *
+ * @param string $phoneNumber Phone number to log
+ * @param string $message     Optional message to log, usually user nick
+ * @param string $logfile     Path to log file
+ *
+ * @return void
+ */
+function logiin($phoneNumber, $message = '', $logfile = '')
+{
     if (empty($message)) {
         $logString = date(DATE_W3C) . ', ' . $phoneNumber . "\n";
     } else {
@@ -93,9 +103,9 @@ $app->get(
 
         $result = [];
 
-        foreach($log_array as $row) {
+        foreach ($log_array as $row) {
             // Skip empty rows from log array
-            if(empty($row)) {
+            if (empty($row)) {
                 continue;
             }
 
@@ -104,14 +114,18 @@ $app->get(
             $timestamp = strtotime(strip_tags($info[0]));
             $username =  strip_tags(trim(utf8_decode($info[2])));
 
-            if($username === 'boot' || strtolower($username) === 'denied') {
+            if ($username === 'boot' || strtolower($username) === 'denied') {
                 continue;
             }
 
             break;
         }
 
-        $result = 'Door last opened by \'' . $username . '\' ' . FuzzyTime::getFuzzyTime($timestamp);
+        $result = sprintf(
+            "Door last opened by '%s' %s",
+            $username,
+            FuzzyTime::getFuzzyTime($timestamp)
+        );
 
         echo $result;
     }

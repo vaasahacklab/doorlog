@@ -2,8 +2,8 @@
 class FuzzyTime
 {
     /**
-    * Various time formats - used in calculations
-    */
+     * Various time formats - used in calculations
+     */
     private static $_time_formats = [
         [60, 'just now'],
         [90, '1 minute'],
@@ -21,26 +21,29 @@ class FuzzyTime
     ];
 
     /**
-    * Convert date into a 'fuzzy' format: 15 minutes ago, 3 days ago, etc.
-    *
-    * @param string|number Unix timestamp or a string to parse to a date
-    *
-    * @return string Human readable relative date as string
-    */
+     * Convert date into a 'fuzzy' format: 15 minutes ago, 3 days ago, etc.
+     *
+     * @param string|number $date_from Unix timestamp or a string to parse to a date
+     *
+     * @return string Human readable relative date as string
+     */
     public static function getFuzzyTime($date_from)
     {
         $now = time(); // current unix timestamp
 
         // if a number is passed assume it is a unix time stamp
         // if string is passed try and parse it to unix time stamp
-        if(is_numeric($date_from)){
+        if (is_numeric($date_from)) {
             $dateFrom = $date_from;
-        }elseif (is_string($date_from)) {
+        } elseif (is_string($date_from)) {
             $dateFrom   = strtotime($date_from);
         }
 
-        $difference = $now - $dateFrom; // difference between now and the passed time.
-        $val = '';// value to return
+        // difference between now and the passed time.
+        $difference = $now - $dateFrom;
+
+        // value to return
+        $val = '';
 
         if ($dateFrom <= 0) {
             $val = 'a long time ago';
