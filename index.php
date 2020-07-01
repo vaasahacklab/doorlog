@@ -101,14 +101,14 @@ $app->get(
 
             // Get info from row
             $info = explode(', ', $row);
-            $timestamp = strtotime($info[0]);
-            $username = trim(utf8_decode($info[2]));
+            $timestamp = strtotime(strip_tags($info[0]));
+            $username =  strip_tags(trim(utf8_decode($info[2])));
 
             if($username === 'boot' || strtolower($username) === 'denied') {
                 continue;
             }
 
-        break;
+            break;
         }
 
         $result = 'Door last opened by \'' . $username . '\' ' . FuzzyTime::getFuzzyTime($timestamp);
