@@ -6,6 +6,14 @@ require 'Slim/Slim.php';
 require 'config.php'; // Initializes $settings
 require 'FuzzyTime.php';
 
+// Sanity check settings
+if (!isset($settings['api_key'])) {
+    throw new Exception("Error: API key not set in config", 1);
+}
+if (!isset($settings['log_file'])) {
+    throw new Exception("Error: log file path not set in config", 1);
+}
+
 // Instantiate a Slim application using its default settings.
 $app = new \Slim\Slim();
 
