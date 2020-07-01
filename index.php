@@ -10,9 +10,9 @@ require 'FuzzyTime.php';
 $app = new \Slim\Slim();
 
 // Settings
-$app->config(array(
-    'debug' => true
-));
+$app->config(
+    ['debug' => isset($settings['debug']) ? (bool)$settings['debug'] : false]
+);
 
 function logiin($phoneNumber, $message = '', $logfile = '') {
     if (empty($message)) {
