@@ -112,22 +112,30 @@ $app->post(
  */
 $app->get(
     '/newest',
-    function () use ($app, $settings) {
+    function () use ($settings) {
+        $logRows = [];
+
         // Get last 1000 characters from log file, usually enough
-        $log = substr(
-            file_get_contents($settings['log_file']),
-            -1000
-        );
+        $data = file_get_contents($settings['log_file']);
+        if ($data !== false) {
+            $log = substr(
+                $data,
+                -1000
+            );
 
-        // Turn log content into array and reverse it, now newest line is first
-        $logRows = explode("\n", $log);
-        $logRows = array_reverse($logRows);
+            // Turn log content into array and reverse it, now newest line is first
+            $logRows = explode("\n", $log);
+            $logRows = array_reverse($logRows);
 
-        // Drop last line as it might be cut off and unable to be parse as JSON
-        array_pop($logRows);
+            // Drop last line as it might be cut off and unable to be parse as JSON
+            array_pop($logRows);
+        }
+
 
         $result = [];
         $skipUsernames = ['boot', 'denied'];
+        $timestamp = 0;
+        $username = 'unknown';
         foreach ($logRows as $row) {
             // Skip empty rows from log array
             if (empty($row)) {
