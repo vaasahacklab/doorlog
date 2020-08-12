@@ -31,8 +31,12 @@ $app->config(
  *
  * @return void
  */
-function logiin($token, $message = '', $logfile = '')
+function logiin($token = '', $message = '', $logfile = '')
 {
+    if (empty($token) && empty($message)) {
+        throw new \Exception("Provide token and/or message field", 1);
+    }
+
     // TODO Prevent token from leaking to /newest/ view
     $logString = implode(', ', [date(DATE_W3C), $token, $message]) . "\n";
 
@@ -59,14 +63,17 @@ $app->get(
  * Handle logging phone number and optional message
  */
 $app->post(
-    '/log/',
+    '/log/?',
     function () use ($app, $settings) {
+        $request = $app->request;
+
         // Get auth data
         $apiKey = '';
         $auth = $request->headers->get('Authorization');
         if (!empty($auth)) {
             // Handle format: Bearer xyz
-            $apiKey = array_pop(explode(' ', $auth));
+            $authParts = explode(' ', $auth);
+            $apiKey = array_pop($authParts);
         }
         if (empty($apiKey)) {
             $apiKey = $app->request->post('key');
