@@ -107,7 +107,7 @@ $app->post(
 );
 
 $app->get(
-    '/newest',
+    '/newest/?',
     function () use ($app, $settings) {
         // Get last 1000 characters from log file, usually enough
         $log = substr(
@@ -121,6 +121,7 @@ $app->get(
 
         $result = [];
         $nickname = 'Unknown';
+        $timestamp = 0;
 
         foreach ($log_array as $row) {
             // Skip empty rows from log array
@@ -133,12 +134,13 @@ $app->get(
             $timestamp = strtotime(strip_tags($info[0]));
 
             $extractedNickname = strip_tags(trim(utf8_decode($info[2])));
-            if ($extractedNickname === 'boot' || strtolower($extractedNickname) === 'denied') {
+            if ($extractedNickname === 'boot'
+                || strtolower($extractedNickname) === 'denied'
+            ) {
                 continue;
             }
 
             $nickname = $extractedNickname;
-
             break;
         }
 
