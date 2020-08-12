@@ -25,19 +25,16 @@ $app->config(
 /**
  * Log door opening event to log file
  *
- * @param string $phoneNumber Phone number to log
- * @param string $message     Optional message to log, usually user nick
- * @param string $logfile     Path to log file
+ * @param string $token   Phone number/token to log
+ * @param string $message Optional message to log, usually user nick
+ * @param string $logfile Path to log file
  *
  * @return void
  */
-function logiin($phoneNumber, $message = '', $logfile = '')
+function logiin($token, $message = '', $logfile = '')
 {
-    if (empty($message)) {
-        $logString = date(DATE_W3C) . ', ' . $phoneNumber . "\n";
-    } else {
-        $logString = date(DATE_W3C) . ', ' . $phoneNumber . ', ' . $message . "\n";
-    }
+    // TODO Prevent token from leaking to /newest/ view
+    $logString = implode(', ', [date(DATE_W3C), $token, $message]) . "\n";
 
     file_put_contents($logfile, $logString, FILE_APPEND);
 }
@@ -64,21 +61,35 @@ $app->get(
 $app->post(
     '/log/',
     function () use ($app, $settings) {
-        $apiKey = $app->request->post('key');
-        $phoneNumber = $app->request->post('phone');
+        // Get auth data
+        $apiKey = '';
+        $auth = $request->headers->get('Authorization');
+        if (!empty($auth)) {
+            // Handle format: Bearer xyz
+            $apiKey = array_pop(explode(' ', $auth));
+        }
+        if (empty($apiKey)) {
+            $apiKey = $app->request->post('key');
+        }
+
+        // Get request logging data
+        $token = $app->request->post('token');
+        if (empty($token)) {
+            $token = $app->request->post('phone');
+        }
         $message = $app->request->post('message');
 
-        // Check API key parameter
+        // Check API key
         if (trim($apiKey) !== $settings['api_key']) {
-            $app->halt(403, 'API key access denied');
+            $app->halt(403, 'Access denied');
         }
 
         // Clean up POST data
-        $phoneNumber = preg_replace('/[^\d\w\b -.,:;]/', '', $phoneNumber);
+        $token = preg_replace('/[^\d\w\b -.,:;]/', '', $token);
         $message = preg_replace('/[^\d\w\b -.,:;]/', '', $message);
 
         try {
-            logiin($phoneNumber, $message, $settings['log_file']);
+            logiin($token, $message, $settings['log_file']);
         } catch (Exception $e) {
             echo "FAIL: " . $e->getMessage();
             return;
@@ -102,6 +113,7 @@ $app->get(
         $log_array = array_reverse($log_array);
 
         $result = [];
+        $nickname = 'Unknown';
 
         foreach ($log_array as $row) {
             // Skip empty rows from log array
@@ -112,18 +124,20 @@ $app->get(
             // Get info from row
             $info = explode(', ', $row);
             $timestamp = strtotime(strip_tags($info[0]));
-            $username =  strip_tags(trim(utf8_decode($info[2])));
 
-            if ($username === 'boot' || strtolower($username) === 'denied') {
+            $extractedNickname = strip_tags(trim(utf8_decode($info[2])));
+            if ($extractedNickname === 'boot' || strtolower($extractedNickname) === 'denied') {
                 continue;
             }
+
+            $nickname = $extractedNickname;
 
             break;
         }
 
         $result = sprintf(
             "Door last opened by '%s' %s",
-            $username,
+            $nickname,
             FuzzyTime::getFuzzyTime($timestamp)
         );
 
